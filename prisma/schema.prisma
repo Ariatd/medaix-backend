@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       String                   @id @default(uuid())
+  email                    String                   @unique
+  name                     String
+  avatar                   String?
+  role                     UserRole                 @default(researcher)
+  institution              String?
+  department               String?
+  specialization           String[]
+  orcidId                  String?
+  googleScholarId          String?
+  linkedinUrl              String?
+  isVerified               Boolean                  @default(false)
+  preferences              Json                     @default("{}")
+  memberSince              DateTime                 @default(now())
+  lastActive               DateTime                 @default(now())
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  knowledgeIntegrations    KnowledgeIntegration[]
+  projectCollaborations    ProjectCollaborator[]
+  assignedMethodologySteps ProjectMethodologyStep[]
+  analyses                 ResearchAnalysis[]
+  approvedAnalyses         ResearchAnalysis[]       @relation("AnalysisApprover")
+  reviewedAnalyses         ResearchAnalysis[]       @relation("AnalysisReviewer")
+  projects                 ResearchProject[]        @relation("ProjectPI")
+  uploadedImages           UploadedImage[]
+
+  @@map("users")
+}
+
+model AcademicDiscipline {
+  id                          String                 @id @default(uuid())
+  code                        String                 @unique
+  name                        String
+  parentDisciplineId          String?
+  level                       Int                    @default(1)
+  description                 String?
+  keywords                    String[]
+  isActive                    Boolean                @default(true)
+  createdAt                   DateTime               @default(now())
+  parentDiscipline            AcademicDiscipline?    @relation("DisciplineHierarchy", fields: [parentDisciplineId], references: [id])
+  childDisciplines            AcademicDiscipline[]   @relation("DisciplineHierarchy")
+  knowledgeIntegrationsSource KnowledgeIntegration[] @relation("SourceDiscipline")
+  knowledgeIntegrationsTarget KnowledgeIntegration[] @relation("TargetDiscipline")
+  projectDisciplines          ProjectDiscipline[]
+
+  @@map("academic_disciplines")
+}
+
+model OnetOccupation {
+  id                 String              @id @default(uuid())
+  onetCode           String              @unique
+  title              String
+  description        String?
+  category           String?
+  subdomain          String?
+  tasks              String[]
+  skills             String[]
+  knowledgeAreas     String[]
+  abilities          String[]
+  educationLevel     String?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  projectOccupations ProjectOccupation[]
+
+  @@map("onet_occupations")
+}
+
+model ResearchProject {
+  id                      String                   @id @default(uuid())
+  title                   String
+  description             String?
+  status                  ProjectStatus            @default(planning)
+  principalInvestigatorId String
+  startDate               DateTime?
+  endDate                 DateTime?
+  fundingSource           String?
+  fundingAmount           Decimal?
+  institutions            String[]
+  methodologyType         MethodologyType
+  researchQuestions       String[]
+  objectives              String[]
+  hypotheses              String[]
+  ethicalApprovalRequired Boolean                  @default(false)
+  ethicalApprovalStatus   String?
+  dataClassification      String                   @default("public")
+  collaborationLevel      String                   @default("individual")
+  isPublic                Boolean                  @default(false)
+  tags                    String[]
+  metadata                Json                     @default("{}")
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  knowledgeIntegrations   KnowledgeIntegration[]
+  collaborators           ProjectCollaborator[]
+  disciplines             ProjectDiscipline[]
+  methodologySteps        ProjectMethodologyStep[]
+  occupations             ProjectOccupation[]
+  analyses                ResearchAnalysis[]
+  principalInvestigator   User                     @relation("ProjectPI", fields: [principalInvestigatorId], references: [id])
+  images                  UploadedImage[]
+
+  @@map("research_projects")
+}
+
+model ProjectDiscipline {
+  id                String             @id @default(uuid())
+  projectId         String
+  disciplineId      String
+  primaryDiscipline Boolean            @default(false)
+  contributionLevel String             @default("moderate")
+  createdAt         DateTime           @default(now())
+  discipline        AcademicDiscipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  project           ResearchProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, disciplineId])
+  @@map("project_disciplines")
+}
+
+model ProjectOccupation {
+  id              String          @id @default(uuid())
+  projectId       String
+  occupationId    String
+  relevanceLevel  String          @default("moderate")
+  roleDescription String?
+  createdAt       DateTime        @default(now())
+  occupation      OnetOccupation  @relation(fields: [occupationId], references: [id], onDelete: Cascade)
+  project         ResearchProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, occupationId])
+  @@map("project_occupations")
+}
+
+model MethodologyStep {
+  id                     String                   @id @default(uuid())
+  name                   String
+  description            String?
+  methodologyType        MethodologyType
+  stepOrder              Int
+  estimatedDurationHours Int?
+  requiredResources      String[]
+  deliverables           String[]
+  successCriteria        String[]
+  dependencies           String[]
+  templateData           Json                     @default("{}")
+  isActive               Boolean                  @default(true)
+  createdAt              DateTime                 @default(now())
+  projectSteps           ProjectMethodologyStep[]
+
+  @@map("methodology_steps")
+}
+
+model ProjectMethodologyStep {
+  id                   String          @id @default(uuid())
+  projectId            String
+  methodologyStepId    String
+  assignedToId         String?
+  status               String          @default("pending")
+  actualStartDate      DateTime?
+  actualEndDate        DateTime?
+  notes                String?
+  deliverablesUploaded String[]
+  completionPercentage Int             @default(0)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  assignedTo           User?           @relation(fields: [assignedToId], references: [id])
+  methodologyStep      MethodologyStep @relation(fields: [methodologyStepId], references: [id], onDelete: Cascade)
+  project              ResearchProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, methodologyStepId])
+  @@map("project_methodology_steps")
+}
+
+model UploadedImage {
+  id                    String             @id @default(uuid())
+  projectId             String?
+  uploadedById          String
+  fileName              String
+  originalFileName      String?
+  filePath              String
+  fileSize              BigInt?
+  mimeType              String?
+  imageType             String?
+  imageConfidence       Decimal?
+  width                 Int?
+  height                Int?
+  colorDepth            Int?
+  hasMetadata           Boolean            @default(false)
+  dicomMetadata         Json?
+  analysisStatus        AnalysisStatus     @default(pending)
+  tags                  String[]
+  description           String?
+  consentObtained       Boolean            @default(false)
+  dataClassification    String             @default("restricted")
+  anonymized            Boolean            @default(false)
+  processingStartedAt   DateTime?
+  processingCompletedAt DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  analyses              ResearchAnalysis[]
+  project               ResearchProject?   @relation(fields: [projectId], references: [id])
+  uploadedBy            User               @relation(fields: [uploadedById], references: [id])
+
+  @@map("uploaded_images")
+}
+
+model ResearchAnalysis {
+  id                    String           @id @default(uuid())
+  projectId             String?
+  imageId               String?
+  analystId             String
+  analysisType          String
+  status                AnalysisStatus   @default(pending)
+  confidenceScore       Decimal?
+  processingTimeSeconds Int?
+  algorithmVersion      String?
+  modelUsed             String?
+  findings              Json?
+  recommendations       Json?
+  differentialDiagnosis Json?
+  severityAssessment    Json?
+  regionsOfInterest     Json?
+  qualityMetrics        Json?
+  errorMessage          String?
+  reviewRequired        Boolean          @default(false)
+  reviewedById          String?
+  reviewedAt            DateTime?
+  reviewNotes           String?
+  approvedById          String?
+  approvedAt            DateTime?
+  metadata              Json             @default("{}")
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  analyst               User             @relation(fields: [analystId], references: [id])
+  approvedBy            User?            @relation("AnalysisApprover", fields: [approvedById], references: [id])
+  image                 UploadedImage?   @relation(fields: [imageId], references: [id])
+  project               ResearchProject? @relation(fields: [projectId], references: [id])
+  reviewedBy            User?            @relation("AnalysisReviewer", fields: [reviewedById], references: [id])
+
+  @@map("research_analyses")
+}
+
+model KnowledgeIntegration {
+  id                        String                   @id @default(uuid())
+  projectId                 String
+  sourceDisciplineId        String
+  targetDisciplineId        String
+  integrationType           KnowledgeIntegrationType
+  title                     String
+  description               String?
+  sourceKnowledge           String?
+  targetApplication         String?
+  integrationMethod         String?
+  validationStatus          String                   @default("pending")
+  validationNotes           String?
+  noveltyScore              Decimal?
+  impactPotential           String?
+  implementationFeasibility String?
+  references                String[]
+  supportingEvidence        Json?
+  createdById               String
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
+  createdBy                 User                     @relation(fields: [createdById], references: [id])
+  project                   ResearchProject          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceDiscipline          AcademicDiscipline       @relation("SourceDiscipline", fields: [sourceDisciplineId], references: [id])
+  targetDiscipline          AcademicDiscipline       @relation("TargetDiscipline", fields: [targetDisciplineId], references: [id])
+
+  @@map("knowledge_integrations")
+}
+
+model ProjectCollaborator {
+  id                      String          @id @default(uuid())
+  projectId               String
+  userId                  String
+  role                    String
+  permissions             Json            @default("{}")
+  contributionDescription String?
+  joinedAt                DateTime        @default(now())
+  status                  String          @default("active")
+  project                 ResearchProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user                    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_collaborators")
+}
+
+enum UserRole {
+  admin
+  researcher
+  analyst
+  student
+}
+
+enum ProjectStatus {
+  planning
+  active
+  completed
+  on_hold
+  cancelled
+}
+
+enum AnalysisStatus {
+  pending
+  processing
+  completed
+  failed
+  review_required
+}
+
+enum MethodologyType {
+  multidisciplinary_engineering
+  human_centered_design
+  design_thinking
+  agile_research
+  scientific_method
+  case_study
+  action_research
+}
+
+enum KnowledgeIntegrationType {
+  cross_reference
+  synthesis
+  comparison
+  validation
+  innovation
+}
