@@ -125,7 +125,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   };
 
   // In production, save to database
-  mockProjects.push(newProject);
+  mockProjects.push(newProject as any);
 
   res.status(201).json({
     success: true,
