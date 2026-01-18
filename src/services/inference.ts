@@ -113,8 +113,6 @@ export async function analyzeImage(
   const startTime = Date.now();
   const batchId = uuidv4();
 
-  console.log(`[Inference] Starting analysis for image ${imageId}`);
-
   // Update status to processing
   await updateImageStatus(imageId, 'processing');
 
@@ -128,7 +126,6 @@ export async function analyzeImage(
     // Phase 2: Confidence-based decision making
     if (primaryResult.confidenceScore < CONFIDENCE_THRESHOLDS.LOW) {
       // < 50%: High uncertainty - Auto-fail
-      console.log(`[Inference] Low confidence (${primaryResult.confidenceScore}%) - Failing analysis`);
       
       const processingTime = Math.round((Date.now() - startTime) / 1000);
       
@@ -166,7 +163,6 @@ export async function analyzeImage(
       return finalResult;
     } else if (primaryResult.confidenceScore < CONFIDENCE_THRESHOLDS.MEDIUM) {
       // 50-70%: Medium confidence - Require secondary verification
-      console.log(`[Inference] Medium confidence (${primaryResult.confidenceScore}%) - Triggering secondary verification`);
       
       secondaryVerification = await performSecondaryVerification(imageId);
       
@@ -208,7 +204,6 @@ export async function analyzeImage(
       await updateImageStatus(imageId, 'completed');
     } else if (primaryResult.confidenceScore < CONFIDENCE_THRESHOLDS.HIGH) {
       // 70-85%: Good confidence - Accept with yellow warning
-      console.log(`[Inference] Good confidence (${primaryResult.confidenceScore}%) - Accepting with warning`);
       
       const processingTime = Math.round((Date.now() - startTime) / 1000);
       
@@ -241,7 +236,6 @@ export async function analyzeImage(
       await updateImageStatus(imageId, 'completed');
     } else {
       // 85-100%: High confidence - Accept with green confirmation
-      console.log(`[Inference] High confidence (${primaryResult.confidenceScore}%) - Accepting`);
       
       const processingTime = Math.round((Date.now() - startTime) / 1000);
       
@@ -276,8 +270,6 @@ export async function analyzeImage(
 
     // Generate simulated Grad-CAM++ heatmap
     finalResult.heatmapUrl = await generateGradCAMHeatmap(imageId);
-
-    console.log(`[Inference] Analysis completed in ${finalResult.processingTimeSeconds}s with confidence ${finalResult.confidenceScore}%`);
 
     return finalResult;
 
@@ -479,8 +471,6 @@ async function saveAnalysisResult(
   result: AnalysisResult
 ): Promise<void> {
   try {
-    console.log(`[Inference] Attempting to save analysis result for image ${imageId}`);
-
     // Find the user who uploaded the image
     const image = await prisma.uploadedImage.findUnique({
       where: { id: imageId },
@@ -491,8 +481,6 @@ async function saveAnalysisResult(
       console.error(`[Inference] Image ${imageId} not found in database - cannot save analysis result`);
       return;
     }
-
-    console.log(`[Inference] Found image uploaded by user ${image.uploadedById}`);
 
     // Create or update analysis record
     const analysisRecord = await prisma.researchAnalysis.upsert({
@@ -541,16 +529,8 @@ async function saveAnalysisResult(
         } as any
       }
     });
-
-    console.log(`[Inference] ✅ Analysis result saved successfully!`);
-    console.log(`[Inference]   - Analysis ID: ${analysisRecord.id}`);
-    console.log(`[Inference]   - Status: ${analysisRecord.status}`);
-    console.log(`[Inference]   - Confidence: ${analysisRecord.confidenceScore}`);
-    console.log(`[Inference]   - Image ID: ${analysisRecord.imageId}`);
-    console.log(`[Inference]   - Analyst ID: ${analysisRecord.analystId}`);
   } catch (error) {
-    console.error(`[Inference] ❌ Failed to save analysis result for image ${imageId}:`, error);
-    console.error(`[Inference] Error details:`, JSON.stringify(error, null, 2));
+    console.error(`[Inference] Failed to save analysis result for image ${imageId}:`, error);
   }
 }
 
@@ -577,8 +557,6 @@ async function updateImageStatus(
       where: { id: imageId },
       data: updateData
     });
-
-    console.log(`[Inference] Image ${imageId} status updated to ${status}`);
   } catch (error) {
     console.error(`[Inference] Failed to update image status:`, error);
   }

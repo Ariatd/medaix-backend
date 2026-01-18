@@ -72,7 +72,6 @@ async function ensureDefaultUser(): Promise<string> {
     }
   });
 
-  console.log('[Upload] Created default demo user:', defaultUser.id);
   return defaultUser.id;
 }
 
@@ -108,7 +107,6 @@ async function getOrCreateUser(userId?: string): Promise<string> {
     }
   });
 
-  console.log('[Upload] Created new user:', newUser.id);
   return newUser.id;
 }
 
@@ -183,7 +181,6 @@ router.post('/image', upload.single('image'), asyncHandler(async (req: Request, 
   setTimeout(async () => {
     try {
       await analyzeImage(imageId, uploadedFile.buffer);
-      console.log(`[Upload] Analysis completed for image ${imageId}`);
     } catch (error) {
       console.error(`[Upload] Analysis failed for image ${imageId}:`, error);
     }
@@ -207,8 +204,6 @@ router.post('/image', upload.single('image'), asyncHandler(async (req: Request, 
         await prisma.uploadedImage.delete({
           where: { id: imageId }
         });
-
-        console.log(`[Upload] Auto-deleted unanalyzed image ${imageId}`);
       }
     } catch (error) {
       console.error(`[Upload] Failed to auto-delete image ${imageId}:`, error);
