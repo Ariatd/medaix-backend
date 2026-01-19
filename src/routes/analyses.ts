@@ -320,6 +320,69 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   }
 }));
 
+// @route   GET /api/analyses/image/:id
+// @desc    Get analysis result by image ID
+// @access  Private
+router.get('/image/:id', asyncHandler(async (req: Request, res: Response) => {
+  console.log('HIT: /image/:id endpoint called');
+  const { id } = req.params;
+
+  // Try to get from database first
+  try {
+    const dbAnalysis = await prisma.researchAnalysis.findFirst({
+      where: { imageId: id },
+      include: {
+        image: {
+          select: {
+            originalFileName: true,
+            fileSize: true,
+            mimeType: true,
+            imageType: true,
+            createdAt: true
+          }
+        },
+        analyst: {
+          select: {
+            id: true,
+            email: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    if (dbAnalysis) {
+      // Get full result from inference service
+      const fullResult = await getAnalysisResult(id);
+      
+      // Transform database result to match frontend expectations
+      const result = transformAnalysisForFrontend(dbAnalysis, fullResult);
+
+      // Return response WITHOUT data wrapper
+      res.json({
+        success: true,
+        analysis: result
+      });
+      return;
+    }
+  } catch (error) {
+    console.error('Error fetching analysis from database:', error);
+  }
+
+  // Fallback to mock data if not found in database
+  const mockAnalysis = mockAnalyses.find(a => a.id === id);
+
+  if (!mockAnalysis) {
+    throw createError('Analysis not found', 404);
+  }
+
+  // Return response WITHOUT data wrapper
+  res.json({
+    success: true,
+    analysis: transformAnalysisForFrontend(mockAnalysis, null)
+  });
+}));
+
 // @route   POST /api/analyses
 // @desc    Create new analysis and save to database
 // @access  Private
@@ -384,68 +447,6 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     console.error('Error creating analysis in database:', error);
     throw createError('Failed to create analysis', 500);
   }
-}));
-
-// @route   GET /api/analyses/image/:id
-// @desc    Get analysis result by image ID
-// @access  Private
-router.get('/image/:id', asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  // Try to get from database first
-  try {
-    const dbAnalysis = await prisma.researchAnalysis.findFirst({
-      where: { imageId: id },
-      include: {
-        image: {
-          select: {
-            originalFileName: true,
-            fileSize: true,
-            mimeType: true,
-            imageType: true,
-            createdAt: true
-          }
-        },
-        analyst: {
-          select: {
-            id: true,
-            email: true,
-            name: true
-          }
-        }
-      }
-    });
-
-    if (dbAnalysis) {
-      // Get full result from inference service
-      const fullResult = await getAnalysisResult(id);
-      
-      // Transform database result to match frontend expectations
-      const result = transformAnalysisForFrontend(dbAnalysis, fullResult);
-
-      // Return response WITHOUT data wrapper
-      res.json({
-        success: true,
-        analysis: result
-      });
-      return;
-    }
-  } catch (error) {
-    console.error('Error fetching analysis from database:', error);
-  }
-
-  // Fallback to mock data if not found in database
-  const mockAnalysis = mockAnalyses.find(a => a.id === id);
-
-  if (!mockAnalysis) {
-    throw createError('Analysis not found', 404);
-  }
-
-  // Return response WITHOUT data wrapper
-  res.json({
-    success: true,
-    analysis: transformAnalysisForFrontend(mockAnalysis, null)
-  });
 }));
 
 // @route   GET /api/analyses/:id
