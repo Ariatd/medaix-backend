@@ -220,10 +220,10 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 
   try {
     // Get total count for pagination from database
-    const total = await prisma.ResearchAnalysis.count({ where });
+    const total = await prisma.researchAnalysis.count({ where });
 
     // Get paginated results from database
-    const analyses = await prisma.ResearchAnalysis.findMany({
+    const analyses = await prisma.researchAnalysis.findMany({
       where,
       include: {
         image: {
@@ -341,7 +341,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 
   try {
     // Save analysis to Prisma database
-    const newAnalysis = await prisma.ResearchAnalysis.create({
+    const newAnalysis = await prisma.researchAnalysis.create({
       data: {
         id: analysisId,
         projectId: projectId || null,
@@ -394,7 +394,7 @@ router.get('/image/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Try to get from database first
   try {
-    const dbAnalysis = await prisma.ResearchAnalysis.findFirst({
+    const dbAnalysis = await prisma.researchAnalysis.findFirst({
       where: { imageId: id },
       include: {
         image: {
@@ -456,7 +456,7 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Try to get from database first
   try {
-    const dbAnalysis = await prisma.ResearchAnalysis.findUnique({
+    const dbAnalysis = await prisma.researchAnalysis.findUnique({
       where: { id },
       include: {
         image: {
@@ -521,7 +521,7 @@ router.patch('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   try {
     // Try to update in database
-    const updatedAnalysis = await prisma.ResearchAnalysis.update({
+    const updatedAnalysis = await prisma.researchAnalysis.update({
       where: { id },
       data: {
         ...updates,
@@ -577,7 +577,7 @@ router.post('/:id/complete', asyncHandler(async (req: Request, res: Response) =>
 
   try {
     // Try to update in database
-    const updatedAnalysis = await prisma.ResearchAnalysis.update({
+    const updatedAnalysis = await prisma.researchAnalysis.update({
       where: { id },
       data: {
         status: 'completed',
@@ -640,7 +640,7 @@ router.post('/:id/fail', asyncHandler(async (req: Request, res: Response) => {
 
   try {
     // Try to update in database
-    const updatedAnalysis = await prisma.ResearchAnalysis.update({
+    const updatedAnalysis = await prisma.researchAnalysis.update({
       where: { id },
       data: {
         status: 'failed',
@@ -690,7 +690,7 @@ router.get('/user/:userId/statistics', asyncHandler(async (req: Request, res: Re
 
   try {
     // Get statistics from database
-    const userAnalyses = await prisma.ResearchAnalysis.findMany({
+    const userAnalyses = await prisma.researchAnalysis.findMany({
       where: { analystId: userId }
     });
 
@@ -788,7 +788,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   try {
     // Try to delete from database
-    await prisma.ResearchAnalysis.delete({
+    await prisma.researchAnalysis.delete({
       where: { id }
     });
 
