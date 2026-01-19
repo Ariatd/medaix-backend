@@ -277,47 +277,44 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       })
     );
 
+    // Return response WITHOUT data wrapper
     res.json({
       success: true,
-      data: {
-        analyses: transformedAnalyses,
-        pagination: {
-          page: parseInt(page as string),
-          limit: parseInt(limit as string),
-          total,
-          pages: Math.ceil(total / parseInt(limit as string))
-        },
-        summary: {
-          totalAnalyses: total,
-          completedAnalyses: completedAnalyses.length,
-          pendingAnalyses: analyses.filter(a => a.status === 'pending').length,
-          failedAnalyses: analyses.filter(a => a.status === 'failed').length,
-          successRate: Math.round(successRate * 100) / 100,
-          avgConfidence: Math.round(avgConfidence * 100) / 100
-        }
+      analyses: transformedAnalyses,
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total,
+        pages: Math.ceil(total / parseInt(limit as string))
+      },
+      summary: {
+        totalAnalyses: total,
+        completedAnalyses: completedAnalyses.length,
+        pendingAnalyses: analyses.filter(a => a.status === 'pending').length,
+        failedAnalyses: analyses.filter(a => a.status === 'failed').length,
+        successRate: Math.round(successRate * 100) / 100,
+        avgConfidence: Math.round(avgConfidence * 100) / 100
       }
     });
   } catch (error) {
     console.error('Error fetching analyses from database:', error);
-    // Fallback to empty array if database error
+    // Fallback to empty array if database error - return WITHOUT data wrapper
     res.json({
       success: true,
-      data: {
-        analyses: [],
-        pagination: {
-          page: parseInt(page as string),
-          limit: parseInt(limit as string),
-          total: 0,
-          pages: 0
-        },
-        summary: {
-          totalAnalyses: 0,
-          completedAnalyses: 0,
-          pendingAnalyses: 0,
-          failedAnalyses: 0,
-          successRate: 0,
-          avgConfidence: 0
-        }
+      analyses: [],
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total: 0,
+        pages: 0
+      },
+      summary: {
+        totalAnalyses: 0,
+        completedAnalyses: 0,
+        pendingAnalyses: 0,
+        failedAnalyses: 0,
+        successRate: 0,
+        avgConfidence: 0
       }
     });
   }
@@ -376,14 +373,12 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
-      data: {
-        analysis: {
-          id: newAnalysis.id,
-          status: newAnalysis.status,
-          createdAt: newAnalysis.createdAt.toISOString()
-        },
-        message: 'Analysis created successfully'
-      }
+      analysis: {
+        id: newAnalysis.id,
+        status: newAnalysis.status,
+        createdAt: newAnalysis.createdAt.toISOString()
+      },
+      message: 'Analysis created successfully'
     });
   } catch (error) {
     console.error('Error creating analysis in database:', error);
@@ -428,11 +423,10 @@ router.get('/image/:id', asyncHandler(async (req: Request, res: Response) => {
       // Transform database result to match frontend expectations
       const result = transformAnalysisForFrontend(dbAnalysis, fullResult);
 
+      // Return response WITHOUT data wrapper
       res.json({
         success: true,
-        data: {
-          analysis: result
-        }
+        analysis: result
       });
       return;
     }
@@ -447,11 +441,10 @@ router.get('/image/:id', asyncHandler(async (req: Request, res: Response) => {
     throw createError('Analysis not found', 404);
   }
 
+  // Return response WITHOUT data wrapper
   res.json({
     success: true,
-    data: {
-      analysis: transformAnalysisForFrontend(mockAnalysis, null)
-    }
+    analysis: transformAnalysisForFrontend(mockAnalysis, null)
   });
 }));
 
@@ -494,11 +487,10 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
       // Transform database result to match frontend expectations
       const result = transformAnalysisForFrontend(dbAnalysis, fullResult);
 
+      // Return response WITHOUT data wrapper
       res.json({
         success: true,
-        data: {
-          analysis: result
-        }
+        analysis: result
       });
       return;
     }
@@ -513,11 +505,10 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     throw createError('Analysis not found', 404);
   }
 
+  // Return response WITHOUT data wrapper
   res.json({
     success: true,
-    data: {
-      analysis: transformAnalysisForFrontend(analysis, null)
-    }
+    analysis: transformAnalysisForFrontend(analysis, null)
   });
 }));
 
@@ -540,9 +531,7 @@ router.patch('/:id', asyncHandler(async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: {
-        analysis: transformAnalysisForFrontend(updatedAnalysis, null)
-      }
+      analysis: transformAnalysisForFrontend(updatedAnalysis, null)
     });
     return;
   } catch (error) {
@@ -563,11 +552,10 @@ router.patch('/:id', asyncHandler(async (req: Request, res: Response) => {
     updatedAt: new Date()
   } as AnalysisRecord;
 
+  // Return response WITHOUT data wrapper
   res.json({
     success: true,
-    data: {
-      analysis: transformAnalysisForFrontend(mockAnalyses[analysisIndex], null)
-    }
+    analysis: transformAnalysisForFrontend(mockAnalyses[analysisIndex], null)
   });
 }));
 
@@ -607,10 +595,8 @@ router.post('/:id/complete', asyncHandler(async (req: Request, res: Response) =>
 
     res.json({
       success: true,
-      data: {
-        analysis: transformAnalysisForFrontend(updatedAnalysis, null),
-        message: 'Analysis completed successfully'
-      }
+      analysis: transformAnalysisForFrontend(updatedAnalysis, null),
+      message: 'Analysis completed successfully'
     });
     return;
   } catch (error) {
@@ -637,12 +623,11 @@ router.post('/:id/complete', asyncHandler(async (req: Request, res: Response) =>
     updatedAt: new Date()
   } as AnalysisRecord;
 
+  // Return response WITHOUT data wrapper
   res.json({
     success: true,
-    data: {
-      analysis: transformAnalysisForFrontend(mockAnalyses[analysisIndex], null),
-      message: 'Analysis completed successfully'
-    }
+    analysis: transformAnalysisForFrontend(mockAnalyses[analysisIndex], null),
+    message: 'Analysis completed successfully'
   });
 }));
 
@@ -666,10 +651,8 @@ router.post('/:id/fail', asyncHandler(async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: {
-        analysis: transformAnalysisForFrontend(updatedAnalysis, null),
-        message: 'Analysis marked as failed'
-      }
+      analysis: transformAnalysisForFrontend(updatedAnalysis, null),
+      message: 'Analysis marked as failed'
     });
     return;
   } catch (error) {
@@ -691,12 +674,11 @@ router.post('/:id/fail', asyncHandler(async (req: Request, res: Response) => {
     updatedAt: new Date()
   } as AnalysisRecord;
 
+  // Return response WITHOUT data wrapper
   res.json({
     success: true,
-    data: {
-      analysis: transformAnalysisForFrontend(mockAnalyses[analysisIndex], null),
-      message: 'Analysis marked as failed'
-    }
+    analysis: transformAnalysisForFrontend(mockAnalyses[analysisIndex], null),
+    message: 'Analysis marked as failed'
   });
 }));
 
@@ -746,9 +728,10 @@ router.get('/user/:userId/statistics', asyncHandler(async (req: Request, res: Re
       pendingAnalyses: userAnalyses.filter(a => a.status === 'pending').length
     };
 
+    // Return response WITHOUT data wrapper
     res.json({
       success: true,
-      data: { statistics }
+      statistics
     });
     return;
   } catch (error) {
@@ -790,9 +773,10 @@ router.get('/user/:userId/statistics', asyncHandler(async (req: Request, res: Re
     pendingAnalyses: userAnalyses.filter(a => a.status === 'pending').length
   };
 
+  // Return response WITHOUT data wrapper
   res.json({
     success: true,
-    data: { statistics }
+    statistics
   });
 }));
 

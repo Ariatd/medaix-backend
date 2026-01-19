@@ -177,7 +177,7 @@ router.post('/image', upload.single('image'), asyncHandler(async (req: Request, 
     }
   });
 
-  // Start analysis asynchronously
+
   setTimeout(async () => {
     try {
       await analyzeImage(imageId, uploadedFile.buffer);
@@ -212,20 +212,18 @@ router.post('/image', upload.single('image'), asyncHandler(async (req: Request, 
 
   res.status(201).json({
     success: true,
-    data: {
-      image: {
-        id: imageRecord.id,
-        fileName: imageRecord.fileName,
-        originalFileName: imageRecord.originalFileName,
-        fileSize: imageRecord.fileSize?.toString(),
-        mimeType: imageRecord.mimeType,
-        imageType: imageRecord.imageType,
-        analysisStatus: imageRecord.analysisStatus,
-        createdAt: imageRecord.createdAt.toISOString(),
-        updatedAt: imageRecord.updatedAt.toISOString()
-      },
-      message: 'Image uploaded successfully. Analysis will begin shortly.'
-    }
+    image: {
+      id: imageRecord.id,
+      fileName: imageRecord.fileName,
+      originalFileName: imageRecord.originalFileName,
+      fileSize: imageRecord.fileSize?.toString(),
+      mimeType: imageRecord.mimeType,
+      imageType: imageRecord.imageType,
+      analysisStatus: imageRecord.analysisStatus,
+      createdAt: imageRecord.createdAt.toISOString(),
+      updatedAt: imageRecord.updatedAt.toISOString()
+    },
+    message: 'Image uploaded successfully. Analysis will begin shortly.'
   });
 }));
 
