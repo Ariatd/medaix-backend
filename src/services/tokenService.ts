@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-// --- MEVCUT DUMMY FONKSİYONLAR ---
+// --- DUMMY FONKSİYONLAR ---
+
 export const checkTokens = async (userId: any) => { return true; };
 export const deductToken = async (userId: any) => { return true; };
 
+// Bu fonksiyonda hata yoktu ama garanti olsun diye dursun
 export const getUserTokenStats = async (userId: any) => {
   return {
     tokensTotal: 9999,
@@ -16,25 +18,26 @@ export const getUserTokenStats = async (userId: any) => {
 
 export const resetDailyTokens = async () => { console.log('Reset skipped'); };
 
+// --- EKSİK OLAN VE HATAYI ÇÖZECEK KISIM ---
 
-// --- EKSİK OLAN VE HATAYI ÇÖZECEK YENİ DUMMY FONKSİYONLAR ---
-
-// 1. Hata için: getUserTokens
+// HATA BURADAYDI: tokenLastResetDate eksikti, şimdi ekledik.
 export const getUserTokens = async (userId: any) => {
-    return { tokensTotal: 9999, tokensUsedToday: 0, isPro: true };
+    return { 
+        tokensTotal: 9999, 
+        tokensUsedToday: 0, 
+        isPro: true,
+        tokenLastResetDate: new Date() // <--- İşte ilacımız bu!
+    };
 };
 
-// 2. Hata için: canUserAnalyze
 export const canUserAnalyze = async (userId: any) => {
-    return true; // Herkese izin ver
+    return true; 
 };
 
-// 3. Hata için: grantTokens
 export const grantTokens = async (userId: any, amount: number) => {
     return { success: true, message: 'Dummy grant successful' };
 };
 
-// 4. Hata için: upgradeToPro
 export const upgradeToPro = async (userId: any) => {
     return { success: true, isPro: true };
 };
