@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { prisma } from '../server';
 import { getAnalysisResult, AnalysisResult as InferenceAnalysisResult } from '../services/inference';
-
+// Render deploy tetikleme denemesi v2
 const router = express.Router();
 
 // Analysis type definition matching Prisma schema
